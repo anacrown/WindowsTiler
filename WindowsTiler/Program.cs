@@ -8,6 +8,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
+using System.Xml.Serialization;
 using Serilog;
 using Serilog.Context;
 
@@ -620,7 +621,76 @@ namespace WindowsTiler
                 Environment.Exit(0);
             }
 
-            Tile(LoadData().ToArray());
+            var data = new List<window>();
+            data.Add(new window()
+            {
+                process = "ShooterGame",
+                mode = windowMode.hold,
+                position = new List<windowPosition>()
+                {
+                    new windowPosition(){X=0, Y=0},
+                    new windowPosition(){X=960, Y=0},
+                    new windowPosition(){X=1920, Y=0}
+                },
+                size = new List<windowSize>()
+                {
+                    new windowSize(){width=1920, height=1080}
+                }
+            });
+            data.Add(new window()
+            {
+                process = "Zona",
+                mode = windowMode.close,
+                condition = new List<windowCondition>()
+                {
+                    new windowCondition()
+                    {
+                        title=new List<windowConditionTitle>()
+                        {
+                            new windowConditionTitle(){value="Zona", mode=windowConditionTitleMode.equals },
+                            new windowConditionTitle(){isempty=true}
+                        }
+                    },
+                    new windowCondition()
+                    {
+                        width = new windowConditionWidth(){value=162, accuracy=10},
+                        height = new windowConditionHeight(){value=372, accuracy=10}
+                    }
+                }
+            });
+            data.Add(new window()
+            {
+                process = "Zona",
+                mode = windowMode.remember,
+                condition = new List<windowCondition>()
+                {
+                    new windowCondition()
+                    {
+                        title=new List<windowConditionTitle>()
+                        {
+                            new windowConditionTitle(){value="Zona", mode=windowConditionTitleMode.notequals}
+                        }
+                    },
+                    new windowCondition()
+                    {
+                        title=new List<windowConditionTitle>()
+                        {
+                            new windowConditionTitle(){ isempty=false}
+                        }
+                    }
+                }
+            });
+            data.Add(new window()
+            {
+                process = "Shell_TrayWnd",
+                mode = windowMode.notopmost
+            });
+
+            var serializer = new XmlSerializer(typeof(window));
+            using var fs = new FileStream("data.xml", FileMode.Create);
+            serializer.Serialize(fs, data);
+
+            //Tile(LoadData().ToArray());
 
             //Diagnostic();
         }
@@ -685,4 +755,6 @@ namespace WindowsTiler
 
         protected virtual void OnRunUnRegisterInstance(string commandFromRemoteInstance) => RunUnRegisterInstance?.Invoke(this, commandFromRemoteInstance);
     }
+
+
 }
